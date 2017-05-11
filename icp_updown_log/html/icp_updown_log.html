@@ -1,0 +1,209 @@
+{% extends "../../../share_page/sys_body.html" %}
+
+{% block include_css %}
+<link rel="stylesheet" href="/static/css/jquery-ui.css"/>
+<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.css"/>
+<link rel="stylesheet" href="/static/css/ui.jqgrid.css"/>
+{% end %}
+
+{% block breadcrumb %}
+<ul class="breadcrumb">
+	<li>
+		<i class="icon-home home-icon"> </i>
+		<a href="#">主页</a>
+	</li>
+
+	<li>
+		<a href="#">日志中心</a>
+	</li>
+	<li class="active">日志上传与下载</li>
+</ul>
+{% end %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="widget-box">
+            <div class="widget-header">
+                <h5 class="widget-title">控制台</h5>
+
+                <div class="widget-toolbar">
+                    <a href="#" data-action="collapse">
+                        <i class="ace-icon fa fa-chevron-up"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="widget-body">
+                <form id="frm" class="form-horizontal" method="post">
+                    <div class="widget-main">
+                        <!-- 第一行查询条件 -->
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <div class="form-group">
+
+                                    <label class="col-xs-1 control-label no-padding-right" for="date1">起始时间</label>
+                                    <div class="col-xs-2">
+                                            <span class="input-icon input-icon-right">
+                                            	<input  class="laydate-icon" readonly="" id="date1" value="{{date}}"/>
+                                            </span>
+                                    </div>
+                                    
+                                    <label class="col-xs-1 control-label no-padding-right" for="date2">结束时间</label>
+                                    <div class="col-xs-2">
+                                            <span class="input-icon input-icon-right">
+                                            	<input  class="laydate-icon" readonly="" id="date2" value="{{date}}"/>
+                                            </span>
+                                    </div>
+                                    
+                                    <!-- 按钮与最后一个查询控件间隔 -->
+                                    <label class="col-xs-1 control-label"></label>
+                                    <!-- 按钮，放在第一行，如果按钮太多，一行显示不下时，可以分行添加 -->
+                                    <div class="col-xs-2">
+                                        <input type="button" id="query" class="btn btn-primary btn-sm" style="width: 60px; height: 40px;" value = "查询" />
+                                        <!-- <input type="button" id="query_del" class="btn btn-primary btn-sm" value = {{_("del")}} /> -->
+                                    </div>
+									
+                                </div>
+                            </div>
+                        </div><!-- end row -->
+                        
+						<div class="space-6"></div>
+						
+                        <!-- 第二行查询条件 -->
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <div class="form-group">
+
+                                    <label class="col-xs-1 control-label no-padding-right" for="updown">日志类型</label>
+                                    <div class="col-xs-2">
+                                        <select class="form-control" id="updown" class="width-100" onchange="change_type(this.value);">
+                                            <option value="">所有类型</option>
+                                            <option value="0">上报日志</option>
+                                            <option value="1">下载日志</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div><!-- end row -->
+						
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--预留网格位置-->
+<div class="row">
+    <div class="col-xs-12">
+        <table id="grid-table"></table>
+        <div id="grid-pager"></div>
+    </div>
+</div>
+{% end %}
+
+{% block include_js %}
+<script src="/static/js/date-time/bootstrap-datepicker.js"></script>
+<script src="/static/js/jqGrid/jquery.jqGrid.js"></script>
+<script src="/static/js/jqGrid/i18n/grid.locale-cn.js"></script>
+<script src="/static/adjs/ad_jqGrid.js"></script>
+<script src="/static/adjs/aodun.js"></script>
+<script src="/static/laydate/laydate.js"></script>
+{% end %}
+
+{% block include_self_js %}
+<script type="text/javascript">
+
+	!function(){
+		laydate.skin('molv');//切换皮肤，请查看skins下面皮肤库
+		laydate({elem: '#date1'});//绑定元素
+		laydate({elem: '#date2'});//绑定元素
+		}();
+		
+	//////////////////////////////////
+	var init_param = {
+    	// 表格名
+	    "captionString": "上传下载日志信息",  
+	    // 列字段名       
+	    "colNamesList": ['文件名称', '文件全路径', '类型', '上传下载结果','记录时间', '上报文件序列', '下载是否解析','下载解析时间'],  
+	    // 列模型      
+	    "colModelListDict": [
+        {name: 'file_name', index: 'file_name', width: 120,sortable: false, editable: false},
+		{name: 'full_name', index: 'full_name', width: 120,sortable: true, editable: false},
+        {name: 'updown', index: 'updown', width: 90,sortable: false, editable: false},
+		{name: 'updown_result', index: 'updown_result', width: 90, sortable: false, editable: false}
+        {name: 'updown_time', index: 'updown_time', width: 90,sortable: false, editable: false},
+        {name: 'up_sequence', index: 'up_sequence', width: 50, sortable: false, editable: false},
+        {name: 'is_parse', index: 'is_parse', width: 200, sortable: false, editable: false},
+        {name: 'parse_time', index: 'parse_time', width: 90, sortable: false, editable: false}
+    	],      
+	    // 表格初始化 url
+
+	    "queryUrl": "/v1.0/icp_updown_log/get_log_list",                
+	    "navGridBool": false ,
+	};
+    jQuery(function ($) {
+    	//alert("dygh")
+        //倒数第二个参数：表格是否带勾选框
+        //最后一个参数，代表表格左下角工具栏是否显示(新增，编辑，查看，删除，搜索，刷新)
+        //参数列表: 表格标题       表头              列设置	     数据URL 是否多选框  是否工具按钮    自定义操作列
+        ad_jqgrid(init_param);
+        //按钮提示
+        //$('[data-rel=tooltip]').tooltip();
+    });
+	
+	////////////////////////////////////
+
+    /* 点击查询框，可添加查询参数，重载表格数据 */
+    $('#query').on(ace.click_event, function () {
+        var start_time = $("#date1").val();
+        var end_time = $("#date2").val();
+        var updown = $("#updown").val();
+        //var level = $("#level").val();
+        var start_time_list = start_time.split("-");
+		var end_time_list = end_time.split("-");
+		if(start_time_list[1] != end_time_list[1]){
+			alert("起始时间和结束要在同一月份");
+			return;
+		}
+        
+        var urlStr = "";
+        urlStr = "start_time=" + start_time + "&end_time=" + end_time + "&updown=" + updown;
+        var url = "/v1.0/logs/log?";
+        if (urlStr!="" && urlStr!=null)
+            url += urlStr;
+        $("#grid-table").jqGrid('setGridParam',{url:url}).trigger("reloadGrid");
+    });
+    
+    /* 点击删除框，可添加删除条件，重载表格数据 */
+    $('#query_del').on(ace.click_event, function () {
+        var start_time = $("#date1").val();
+        var end_time = $("#date2").val();
+        var updown = $("#updown").val();
+        var c_type = $("#c_type").val();
+        //var level = $("#level").val();
+        var d = new Object();
+        d["start_time"] = start_time
+        d["end_time"] = end_time
+        d["updown"] = updown
+        d["c_type"] = c_type
+        var start_time_list = start_time.split("-");
+		var end_time_list = end_time.split("-");
+		if(start_time_list[1] != end_time_list[1]){
+			alert("起始时间和结束要在同一月份");
+			return;
+		}
+        
+        aodun.post("/v1.0/logs/del_log", d, function(json){
+        	alert(json.msg);
+        	location.href = "/v1.0/logs/log";
+			// aodun.alert_stop(json.msg, function(){
+				// location.href = "/v1.0/logs/log";
+			// });
+		});
+    });
+</script>
+{% end %}
+
+
+
